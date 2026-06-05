@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enablement Navigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F8F8F8;
+    --bg-softened: #F8F6F1;
+    --bg-hover: rgba(38,38,38,0.05);
+    --bg-highlight-light: #F3F6FC;
+    --bg-highlight-strong: #E2EBF8;
+    --text-primary: #262626;
+    --text-secondary: #4D4D4D;
+    --text-tertiary: #595959;
+    --action: #2265C9;
+    --action-hover: #1F4E93;
+    --border: rgba(0,0,0,0.12);
+    --border-active: #595959;
+    --focus: #9257DB;
+    --coral: #FF4852;
+    --green-bg: #BDF4E9; --green-text: #0D735E;
+    --yolk-bg: #FBE7C6;  --yolk-text: #9E5705;
+    --red-bg: #FCE5E4;   --red-text: #C81F14;
+    --blue-bg: #E2EBF8;  --blue-text: #1F4E93;
+    --grey-bg: #EBEBEB;  --grey-text: #595959;
+    --purple-bg: #E7E6FF; --purple-text: #6E2AA7;
+    --font: 'DM Sans', 'Segoe UI', Roboto, sans-serif;
+    --r-sm: 4px; --r-md: 6px; --r-lg: 8px;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 48px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .zh-logo { width: 24px; height: 24px; flex-shrink: 0; }
+  .header-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .header-divider { width: 1px; height: 16px; background: var(--border); }
+  .header-sub { font-size: 12px; color: var(--text-secondary); }
+  .header-link {
+    font-size: 12px; color: var(--action); text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  .header-link:hover { background: var(--bg-secondary); }
+  .header-link svg { width: 12px; height: 12px; }
+
+  /* ── Body ── */
+  .body { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Left panel ── */
+  .left-panel {
+    width: 364px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .left-scroll { flex: 1; overflow-y: auto; padding: 16px; }
+  .left-scroll::-webkit-scrollbar { width: 3px; }
+  .left-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── Role toggle ── */
+  .role-toggle {
+    display: flex;
+    background: var(--bg-secondary);
+    border-radius: var(--r-md);
+    padding: 3px;
+    margin-bottom: 16px;
+    gap: 2px;
+  }
+  .role-btn {
+    flex: 1; padding: 7px 12px;
+    border: none; background: transparent;
+    border-radius: 4px;
+    font-family: var(--font); font-size: 13px; font-weight: 500;
+    color: var(--text-secondary); cursor: pointer;
+    transition: all 0.12s;
+  }
+  .role-btn.active {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+  }
+  .role-btn:hover:not(.active) { background: rgba(0,0,0,0.04); }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  /* ── Scenario grid ── */
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .scenario-card {
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    background: var(--bg-primary);
+    transition: all 0.12s;
+    position: relative;
+  }
+  .scenario-card:hover:not(.selected) {
+    background: var(--bg-secondary);
+    border-color: rgba(0,0,0,0.2);
+  }
+  .scenario-card.selected {
+    background: var(--bg-highlight-light);
+    border-color: var(--action);
+  }
+  .scenario-card-icon {
+    font-size: 15px; line-height: 1;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .scenario-card-title {
+    font-size: 12px; font-weight: 500;
+    color: var(--text-primary); line-height: 1.35;
+    margin-bottom: 3px;
+  }
+  .scenario-card-count {
+    font-size: 11px; color: var(--text-tertiary);
+  }
+  .scenario-card-count span { color: var(--action); font-weight: 500; }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ── Manual filter toggle ── */
+  .filter-body {
+    padding-top: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .filter-group label {
+    display: block;
+    font-size: 11px; font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .filter-group select {
+    width: 100%; padding: 7px 28px 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    font-family: var(--font); font-size: 13px;
+    color: var(--text-primary); background: var(--bg-primary);
+    cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23595959' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center;
+    transition: border-color 0.12s;
+  }
+  .filter-group select:hover { border-color: rgba(0,0,0,0.25); }
+  .filter-group select:focus { outline: 2px solid var(--focus); outline-offset: 1px; border-color: transparent; }
+
+
+  /* ── Right panel ── */
+  .right-panel {
+    flex: 1; overflow-y: auto;
+    padding: 20px 24px;
+    display: flex; flex-direction: column;
+  }
+  .right-panel::-webkit-scrollbar { width: 3px; }
+  .right-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 20px; gap: 10px;
+  }
+  .empty-icon {
+    width: 40px; height: 40px;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+  }
+  .empty-icon svg { width: 18px; height: 18px; color: var(--text-tertiary); }
+  .empty-title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .empty-sub { font-size: 13px; color: var(--text-secondary); max-width: 240px; line-height: 1.5; }
+
+  /* ── Results header ── */
+  .results-header { margin-bottom: 16px; }
+  .results-scenario { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .results-meta { font-size: 12px; color: var(--text-secondary); }
+  .results-meta span { color: var(--action); font-weight: 500; }
+
+  /* ── Asset list ── */
+  .asset-list { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ── Asset card ── */
+  .asset-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 13px 14px;
+    background: var(--bg-primary);
+    transition: border-color 0.12s, box-shadow 0.12s;
+    cursor: pointer;
+  }
+  .asset-card:hover { border-color: rgba(0,0,0,0.22); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .asset-card.expanded { border-color: var(--action); background: var(--bg-highlight-light); }
+  .asset-card.deprecated { opacity: 0.65; }
+  .asset-card-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .asset-name { font-size: 13px; font-weight: 600; line-height: 1.35; }
+  .asset-badges { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .asset-chevron {
+    color: var(--text-tertiary); transition: transform 0.18s;
+    display: flex; align-items: center;
+  }
+  .asset-chevron svg { width: 12px; height: 12px; }
+  .asset-card.expanded .asset-chevron { transform: rotate(180deg); color: var(--action); }
+  .asset-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 10px; }
+  .asset-footer { display: flex; align-items: center; justify-content: space-between; }
+  .asset-status { display: flex; align-items: center; gap: 4px; }
+  /* ── Expanded detail ── */
+  .asset-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    margin-top: 10px; padding-top: 12px;
+    flex-direction: column; gap: 8px;
+  }
+  .asset-card.expanded .asset-detail { display: flex; }
+  .detail-row { display: flex; align-items: center; gap: 8px; }
+  .detail-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); width: 100px; flex-shrink: 0; }
+  .detail-value { font-size: 12px; color: var(--text-primary); }
+  .detail-actions { margin-top: 4px; }
+  .prio-gold   { color: #B8860B; font-size: 12px; }
+  .prio-silver { color: var(--text-secondary); font-size: 12px; }
+  .prio-bronze { color: #A0522D; font-size: 12px; }
+
+  /* ── Tag ── */
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 100px;
+    font-size: 11px; font-weight: 500; line-height: 1.6;
+    white-space: nowrap;
+  }
+  .tag-info     { background: var(--blue-bg);   color: var(--blue-text);   }
+  .tag-positive { background: var(--green-bg);  color: var(--green-text);  }
+  .tag-warning  { background: var(--yolk-bg);   color: var(--yolk-text);   }
+  .tag-negative { background: var(--red-bg);    color: var(--red-text);    }
+  .tag-neutral  { background: var(--grey-bg);   color: var(--grey-text);   }
+  .tag-discovery{ background: var(--purple-bg); color: var(--purple-text); }
+
+  /* ── Open link ── */
+  .open-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 500; color: var(--action);
+    text-decoration: none; flex-shrink: 0;
+    padding: 4px 8px; border-radius: var(--r-md);
+    border: 1px solid rgba(34,101,201,0.25);
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .open-link:hover { background: var(--bg-highlight-light); border-color: var(--action); }
+  .open-link svg { width: 11px; height: 11px; }
+  .asset-card.expanded .open-link {
+    background: var(--action); color: #fff;
+    border-color: var(--action); padding: 5px 12px;
+  }
+  .asset-card.expanded .open-link:hover {
+    background: var(--action-hover); border-color: var(--action-hover);
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <svg class="zh-logo" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="200" cy="200" r="200" fill="#FF4852"/>
+      <path d="M201.86 101.913L112.367 96L106.454 185.493L195.947 191.406L201.86 101.913Z" fill="white"/>
+      <path d="M193.668 223.006L212.259 135.265L300 153.856L193.668 223.006Z" fill="white"/>
+      <path d="M236.088 302.736C260.852 302.736 280.928 282.66 280.928 257.896C280.928 233.132 260.852 213.056 236.088 213.056C211.324 213.056 191.248 233.132 191.248 257.896C191.248 282.66 211.324 302.736 236.088 302.736Z" fill="white"/>
+      <path d="M195.968 191.382C146.571 187.781 103.601 224.91 100 274.307L189.447 280.829L195.968 191.382Z" fill="white"/>
+    </svg>
+    <span class="header-title">Enablement Navigator</span>
+    <div class="header-divider"></div>
+    <span class="header-sub">Find the right asset for any situation</span>
+  </div>
+  <a href="https://www.notion.so/30a523d064a380de983ae2df3bfd6546" class="header-link" target="_blank">
+    Browse all assets
+    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 6h8M6 2l4 4-4 4"/>
+    </svg>
+  </a>
+</header>
+
+<!-- Body -->
+<div class="body">
+
+  <!-- Left panel -->
+  <div class="left-panel">
+    <div class="left-scroll">
+
+      <!-- Role toggle -->
+      <div class="role-toggle" role="tablist">
+        <button class="role-btn active" onclick="setRole('sales')" role="tab" aria-selected="true">Sales / AE</button>
+        <button class="role-btn" onclick="setRole('cs')" role="tab" aria-selected="false">Customer Success</button>
+      </div>
+
+      <!-- Scenario cards -->
+      <div class="section-label" id="scenario-label">Pick your situation</div>
+      <div class="scenario-grid" id="scenario-grid"></div>
+
+      <div class="divider"></div>
+
+      <!-- Additional filters -->
+      <div class="section-label">Refine results</div>
+
+      <div class="filter-body" id="filter-body">
+        <div class="filter-group">
+          <label for="f-type">Asset type</label>
+          <select id="f-type" onchange="applyFilters()">
+            <option value="">Any type</option>
+            <option>Battlecard</option>
+            <option>Case study</option>
+            <option>Deck</option>
+            <option>Demo</option>
+            <option>eBook/white paper</option>
+            <option>Guide / playbook</option>
+            <option>Messaging doc</option>
+            <option>One-pager</option>
+            <option>Testimonial / quote</option>
+            <option>Tool</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="f-category">Enablement category</label>
+          <select id="f-category" onchange="applyFilters()">
+            <option value="">Any category</option>
+            <option>Competitor Collateral</option>
+            <option>Customer Success</option>
+            <option>Messaging & Positioning</option>
+            <option>Pitch & Demo</option>
+            <option>Playbooks</option>
+            <option>Product Collateral</option>
+            <option>Social Proof</option>
+            <option>Tools</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="f-prio">Review priority</label>
+          <select id="f-prio" onchange="applyFilters()">
+            <option value="">Any priority</option>
+            <option value="Gold">🥇 Gold</option>
+            <option value="Silver">🥈 Silver</option>
+            <option value="Bronze">🥉 Bronze</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="right-panel" id="right-panel">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon" id="empty-icon">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10" cy="10" r="7"/>
+          <path d="M7 10h6M10 7v6"/>
+        </svg>
+      </div>
+      <p class="empty-title" id="empty-title">Pick a situation</p>
+      <p class="empty-sub" id="empty-sub">Select a scenario on the left and the most relevant assets will appear here.</p>
+    </div>
+    <div id="results" style="display:none;">
+      <div class="results-header">
+        <div class="results-scenario" id="results-title"></div>
+        <div class="results-meta" id="results-meta"></div>
+      </div>
+      <div class="asset-list" id="asset-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ASSETS = {
+  'ai-narrative': {
+    name: 'AI narrative (customer-facing)',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Core AI story for customer conversations. Covers zh\'s AI direction and MCP. Updated Jan \'26.',
+    status: 'current', lastReviewed: '2026-01-22', reviewPrio: 'Silver',
+    topics: ['narrative','ai-mcp'],
+    url: 'https://app.notion.com/p/311523d064a38076a223c285be8ef4ea'
+  },
+  'key-feature-themes': {
+    name: 'Key feature themes and outcomes',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Feature-level messaging with customer outcomes. Useful for tailoring to specific needs.',
+    status: 'current', lastReviewed: '2026-02-03', reviewPrio: 'Silver',
+    topics: ['narrative','roadmap'],
+    url: 'https://app.notion.com/p/312523d064a38093aac4c6c9ab99191c'
+  },
+  'icp-deck': {
+    name: 'What is our ICP — background deck',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Background on our ideal customer profile — who we sell to and why they buy.',
+    status: 'current', lastReviewed: '2024-03-01', reviewPrio: 'Bronze',
+    topics: ['narrative'],
+    url: 'https://app.notion.com/p/30d523d064a380e7bc61df23d905569f'
+  },
+  'demo-deck': {
+    name: 'Demo deck template',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Standard demo deck template. Start here for any product walkthrough with a prospect.',
+    status: 'current', lastReviewed: '2026-01-23', reviewPrio: 'Gold',
+    topics: ['demo'],
+    url: 'https://app.notion.com/p/312523d064a3807886f2e1b7adf53aa7'
+  },
+  'demo-env-baseline': {
+    name: 'Demo environment — Baseline',
+    type: 'Tool', typeStyle: 'tag-discovery',
+    desc: 'Pre-built demo environment with sample content. Use as your starting point for live demos.',
+    status: 'current', lastReviewed: '2026-01-22', reviewPrio: 'Silver',
+    topics: ['demo'],
+    url: 'https://app.notion.com/p/30d523d064a3803dbe02cbd9d262f49e'
+  },
+  'demo-env-walkthrough': {
+    name: 'Demo environment — Walkthrough',
+    type: 'Guide / playbook', typeStyle: 'tag-neutral',
+    desc: 'Step-by-step guide for navigating the demo environment. Good for AE onboarding.',
+    status: 'current', lastReviewed: '2026-03-17', reviewPrio: 'Bronze',
+    topics: ['demo'],
+    url: 'https://app.notion.com/p/326523d064a380ff9108d1524719a2e8'
+  },
+  'demo-video-mcp': {
+    name: 'Demo video: MCP + Figma Make',
+    type: 'Demo', typeStyle: 'tag-positive',
+    desc: 'Short video showing MCP in action with Figma Make. Send async or use to open an AI conversation.',
+    status: 'current', lastReviewed: '2026-04-29', reviewPrio: 'Silver',
+    topics: ['demo','ai-mcp'],
+    url: 'https://app.notion.com/p/351523d064a3801e99ace9de0cd58d4c'
+  },
+  'supernova-deck': {
+    name: 'Supernova comparison deck',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Head-to-head comparison with Supernova. Use when Supernova is actively in play.',
+    status: 'current', lastReviewed: '2026-01-16', reviewPrio: 'Bronze',
+    topics: ['competitive'],
+    url: 'https://app.notion.com/p/30a523d064a380519d90fe3f79f11b7c'
+  },
+  'supernova-1pager': {
+    name: 'Supernova internal 1-pager',
+    type: 'One-pager', typeStyle: 'tag-info',
+    desc: 'Quick internal reference on zh vs Supernova. Key differentiators at a glance.',
+    status: 'current', lastReviewed: '2026-03-26', reviewPrio: 'Silver',
+    topics: ['competitive','narrative'],
+    url: 'https://app.notion.com/p/32f523d064a3800babc2d51cde10a9ff'
+  },
+  'supernova-quotes': {
+    name: 'Supernova customer/prospect quotes',
+    type: 'Testimonial / quote', typeStyle: 'tag-positive',
+    desc: 'Real quotes from customers who chose zh over Supernova. Use to add proof in competitive situations.',
+    status: 'current', lastReviewed: '2026-03-18', reviewPrio: 'Bronze',
+    topics: ['competitive','social-proof'],
+    url: 'https://app.notion.com/p/327523d064a38014b0b7efaa36e8cf73'
+  },
+  'status-quo-guide': {
+    name: 'Status quo positioning guide',
+    type: 'Guide / playbook', typeStyle: 'tag-neutral',
+    desc: 'How to handle "why not stick with what we have?" and "why not build it ourselves?" conversations.',
+    status: 'current', lastReviewed: '2026-04-09', reviewPrio: 'Silver',
+    topics: ['competitive','narrative','roi'],
+    url: 'https://app.notion.com/p/33d523d064a380928051d0b2197f3c7b'
+  },
+  'enterprise-plans': {
+    name: 'Enterprise sales plans',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Sales plan templates for Enterprise accounts. Covers goals, stakeholders, and timelines.',
+    status: 'current', lastReviewed: '2026-03-09', reviewPrio: 'Bronze',
+    topics: ['narrative','roi'],
+    url: 'https://app.notion.com/p/312523d064a380c39255ebecb4a6d388'
+  },
+  'roi-calculator': {
+    name: 'Design System ROI calculator',
+    type: 'Tool', typeStyle: 'tag-discovery',
+    desc: 'Interactive calculator to quantify design system value. Great for internal stakeholder buy-in.',
+    status: 'current', lastReviewed: null, reviewPrio: 'Bronze',
+    topics: ['roi'],
+    url: 'https://app.notion.com/p/30d523d064a380c180b0d836de1cd977'
+  },
+  'convince-your-boss': {
+    name: 'Convince your boss eBook',
+    type: 'eBook/white paper', typeStyle: 'tag-neutral',
+    desc: 'Shareable eBook for champions to use internally. Covers the case for a design system platform.',
+    status: 'needs-review', lastReviewed: '2025-08-01', reviewPrio: 'Silver',
+    topics: ['roi','narrative'],
+    url: 'https://app.notion.com/p/313523d064a380a5a398e85fc15b3b1b'
+  },
+  'case-study-sage': {
+    name: 'Case study — Sage',
+    type: 'Case study', typeStyle: 'tag-neutral',
+    desc: 'Sage went from "wild west" to clear design principles with zh. Good for regulated industries.',
+    status: 'current', lastReviewed: '2026-02-20', reviewPrio: 'Bronze',
+    topics: ['social-proof'],
+    url: 'https://app.notion.com/p/30d523d064a380539d52ed95435e6976'
+  },
+  'case-study-avalara': {
+    name: 'Case study — Avalara',
+    type: 'Case study', typeStyle: 'tag-neutral',
+    desc: 'How Avalara built a design system to unify their products. Good for multi-product companies.',
+    status: 'current', lastReviewed: '2026-02-20', reviewPrio: 'Bronze',
+    topics: ['social-proof'],
+    url: 'https://app.notion.com/p/30d523d064a380e08dead564ba68ed55'
+  },
+  'knapsack-info': {
+    name: 'zh vs Knapsack info',
+    type: 'Battlecard', typeStyle: 'tag-warning',
+    desc: 'Internal reference on Knapsack. Note: Knapsack is pivoting to an agency/dev-services model.',
+    status: 'current', lastReviewed: '2026-02-04', reviewPrio: 'Bronze',
+    topics: ['competitive'],
+    url: 'https://app.notion.com/p/30a523d064a380cc8551e598b22d54cf'
+  },
+  'roadmap-deck': {
+    name: 'Roadmap & New Features deck',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Latest roadmap and recent releases. Use for renewal conversations, QBRs, and expansion.',
+    status: 'current', lastReviewed: '2026-03-09', reviewPrio: 'Gold',
+    topics: ['roadmap','narrative'],
+    url: 'https://app.notion.com/p/30a523d064a38024b478ddd8408c9b1f'
+  },
+  'csm-decks': {
+    name: 'CSM Core & Lifecycle Decks',
+    type: 'Deck', typeStyle: 'tag-info',
+    desc: 'Core CS deck library covering onboarding, QBR, renewal, and expansion motions.',
+    status: 'current', lastReviewed: null, reviewPrio: null,
+    topics: ['narrative','roadmap'],
+    url: 'https://app.notion.com/p/311523d064a38057847ed6a4cb124328'
+  },
+  'mcp-messaging': {
+    name: 'Feature messaging: MCP (remote)',
+    type: 'Messaging doc', typeStyle: 'tag-neutral',
+    desc: 'Approved messaging for MCP remote. Covers FAQs, setup guidance, and talking points.',
+    status: 'current', lastReviewed: '2026-01-19', reviewPrio: null,
+    topics: ['ai-mcp'],
+    url: 'https://app.notion.com/p/30d523d064a38069b11ce87971dae205'
+  },
+  'mcp-updates': {
+    name: '2026 MCP updates log',
+    type: 'Guide / playbook', typeStyle: 'tag-neutral',
+    desc: 'Running log of MCP changes. Use to answer "what\'s new in MCP?" and keep conversations current.',
+    status: 'current', lastReviewed: '2026-03-27', reviewPrio: 'Gold',
+    topics: ['ai-mcp'],
+    url: 'https://app.notion.com/p/30d523d064a38048ab54fd0bca0a628c'
+  },
+  'tokens-field-guide': {
+    name: 'Tokens rebuild \'26 field guide',
+    type: 'Messaging doc', typeStyle: 'tag-neutral',
+    desc: 'Field guide covering the tokens rebuild — key changes, talking points, and upgrade path.',
+    status: 'current', lastReviewed: '2026-04-23', reviewPrio: 'Bronze',
+    topics: ['tokens'],
+    url: 'https://app.notion.com/p/34b523d064a38081b55bf1baaaa2c206'
+  },
+  'case-study-notebooklm': {
+    name: 'Case study NotebookLM',
+    type: 'Tool', typeStyle: 'tag-discovery',
+    desc: 'AI tool trained on zh case studies. Good for quickly retrieving relevant customer stories.',
+    status: 'current', lastReviewed: '2026-01-19', reviewPrio: 'Silver',
+    topics: ['social-proof'],
+    url: 'https://app.notion.com/p/30d523d064a380c1b5e2ce1ccfcc1ff9'
+  },
+  'sales-deck-gpt': {
+    name: 'Sales deck generator (custom GPT)',
+    type: 'Tool', typeStyle: 'tag-discovery',
+    desc: 'GPT that generates a custom sales deck based on prospect context. Good for tailored outreach.',
+    status: 'current', lastReviewed: '2026-01-30', reviewPrio: null,
+    topics: ['demo','narrative'],
+    url: 'https://app.notion.com/p/312523d064a3807aafdff329fa9e896b'
+  }
+};
+
+const SCENARIOS = {
+  sales: [
+    { id: 's-discovery', icon: '🔍', title: 'Initial discovery call',
+      assets: ['ai-narrative','key-feature-themes','icp-deck','demo-deck','sales-deck-gpt'] },
+    { id: 's-demo', icon: '🎬', title: 'Tailored product demo',
+      assets: ['demo-deck','demo-env-baseline','demo-env-walkthrough','demo-video-mcp'] },
+    { id: 's-objections', icon: '⚔️', title: 'Objections & competitive pushback',
+      assets: ['status-quo-guide','supernova-deck','supernova-1pager','supernova-quotes','knapsack-info','roi-calculator'] },
+    { id: 's-bizcase', icon: '💼', title: 'Building a business case',
+      assets: ['roi-calculator','convince-your-boss','enterprise-plans','case-study-avalara','case-study-notebooklm'] },
+    { id: 's-champion', icon: '🏆', title: 'Enabling a champion',
+      assets: ['convince-your-boss','roi-calculator','case-study-sage','case-study-avalara','key-feature-themes'] },
+    { id: 's-closing', icon: '🤝', title: 'Progressing & closing a deal',
+      assets: ['enterprise-plans','key-feature-themes','roadmap-deck','supernova-1pager'] }
+  ],
+  cs: [
+    { id: 'c-onboarding', icon: '🚀', title: 'Onboarding & initial value',
+      assets: ['csm-decks','demo-env-baseline','key-feature-themes','roadmap-deck'] },
+    { id: 'c-adoption', icon: '📈', title: 'Driving product adoption',
+      assets: ['demo-video-mcp','mcp-messaging','mcp-updates','ai-narrative','roadmap-deck'] },
+    { id: 'c-atrisk', icon: '⚠️', title: 'Customer disengaged or at risk',
+      assets: ['csm-decks','roadmap-deck','roi-calculator','key-feature-themes','case-study-notebooklm'] },
+    { id: 'c-renewal', icon: '🔄', title: 'Renewal conversation',
+      assets: ['roadmap-deck','csm-decks','key-feature-themes','supernova-1pager','supernova-quotes','status-quo-guide'] },
+    { id: 'c-expansion', icon: '💡', title: 'Expansion or upsell',
+      assets: ['roadmap-deck','ai-narrative','demo-video-mcp','enterprise-plans'] },
+    { id: 'c-qbr', icon: '📋', title: 'Business review / QBR',
+      assets: ['roadmap-deck','csm-decks','key-feature-themes','case-study-sage'] }
+  ]
+};
+
+const MOMENTS = {
+  sales: ['Initial discovery call','Tailored product demo','Objections & competitive pushback','Building a business case','Enabling a champion','Progressing & closing a deal'],
+  cs:    ['Onboarding & initial value','Driving product adoption','Customer disengaged or at risk','Renewal conversation','Expansion or upsell','Business review / QBR']
+};
+
+let currentRole = 'sales';
+let selectedScenario = null;
+let currentScenarioAssets = null;
+
+function setRole(role) {
+  currentRole = role;
+  selectedScenario = null;
+  currentScenarioAssets = null;
+  document.querySelectorAll('.role-btn').forEach((b,i) => {
+    b.classList.toggle('active', (role==='sales'&&i===0)||(role==='cs'&&i===1));
+    b.setAttribute('aria-selected', (role==='sales'&&i===0)||(role==='cs'&&i===1));
+  });
+  renderScenarios();
+  applyFilters();
+}
+
+function renderScenarios() {
+  const grid = document.getElementById('scenario-grid');
+  const scenarios = SCENARIOS[currentRole];
+  grid.innerHTML = scenarios.map(s => {
+    const count = s.assets.length;
+    return `<div class="scenario-card" id="card-${s.id}" onclick="selectScenario('${s.id}')">
+      <span class="scenario-card-icon">${s.icon}</span>
+      <div class="scenario-card-title">${s.title}</div>
+      <div class="scenario-card-count"><span>${count}</span> assets</div>
+    </div>`;
+  }).join('');
+}
+
+function selectScenario(id) {
+  selectedScenario = id;
+  document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('card-' + id);
+  if (card) card.classList.add('selected');
+  const allScenarios = [...SCENARIOS.sales, ...SCENARIOS.cs];
+  const scenario = allScenarios.find(s => s.id === id);
+  if (scenario) {
+    currentScenarioAssets = scenario.assets;
+    currentScenarioTitle = scenario.title;
+    applyFilters();
+  }
+}
+let currentScenarioTitle = '';
+
+function showEmpty(noResults) {
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('results').style.display = 'none';
+  if (noResults) {
+    document.getElementById('empty-title').textContent = 'No assets for this combination';
+    document.getElementById('empty-sub').textContent = 'Try broadening your filters — for example, remove the topic or change the moment.';
+    document.getElementById('empty-icon').innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--text-tertiary)"><circle cx="10" cy="10" r="7"/><path d="M7 10h6"/></svg>';
+  } else {
+    document.getElementById('empty-title').textContent = 'Pick a situation';
+    document.getElementById('empty-sub').textContent = 'Select a scenario on the left and the most relevant assets will appear here.';
+    document.getElementById('empty-icon').innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--text-tertiary)"><circle cx="10" cy="10" r="7"/><path d="M7 10h6M10 7v6"/></svg>';
+  }
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+}
+
+function prioHTML(p) {
+  if (!p) return '<span style="color:var(--text-tertiary);font-size:12px;">—</span>';
+  const cls = p === 'Gold' ? 'prio-gold' : p === 'Silver' ? 'prio-silver' : 'prio-bronze';
+  const icon = p === 'Gold' ? '🥇' : p === 'Silver' ? '🥈' : '🥉';
+  return `<span class="${cls}">${icon} ${p}</span>`;
+}
+
+const ASSET_META = {
+  'ai-narrative':       { owner: 'Liam T.',             category: ['Messaging & Positioning'] },
+  'key-feature-themes': { owner: 'Liam T.',             category: ['Messaging & Positioning', 'Customer Success', 'Pitch & Demo'] },
+  'icp-deck':           { owner: '—',                   category: ['Messaging & Positioning'] },
+  'demo-deck':          { owner: 'Liam T.',             category: ['Pitch & Demo'] },
+  'demo-env-baseline':  { owner: '—',                   category: ['Tools', 'Pitch & Demo'] },
+  'demo-env-walkthrough':{ owner: '—',                  category: ['Pitch & Demo'] },
+  'demo-video-mcp':     { owner: 'Liam T.',             category: ['Product Collateral', 'Pitch & Demo'] },
+  'supernova-deck':     { owner: '—',                   category: ['Competitor Collateral'] },
+  'supernova-1pager':   { owner: 'Seb M.',              category: ['Messaging & Positioning', 'Competitor Collateral'] },
+  'supernova-quotes':   { owner: 'Seb M.',              category: ['Social Proof'] },
+  'status-quo-guide':   { owner: 'Seb M.',              category: ['Messaging & Positioning', 'Competitor Collateral', 'Playbooks'] },
+  'enterprise-plans':   { owner: '—',                   category: ['Messaging & Positioning', 'Pitch & Demo', 'Product Collateral'] },
+  'roi-calculator':     { owner: '—',                   category: ['Tools'] },
+  'convince-your-boss': { owner: '—',                   category: ['Product Collateral', 'Tools'] },
+  'case-study-sage':    { owner: 'Seb M., Liam T.',     category: ['Social Proof'] },
+  'case-study-avalara': { owner: 'Seb M., Liam T.',     category: ['Social Proof'] },
+  'knapsack-info':      { owner: '—',                   category: ['Competitor Collateral'] },
+  'roadmap-deck':       { owner: 'Liam T., Seb M.',     category: ['Pitch & Demo', 'Customer Success', 'Messaging & Positioning'] },
+  'csm-decks':          { owner: '—',                   category: ['Customer Success'] },
+  'mcp-messaging':      { owner: 'Liam T.',             category: ['Messaging & Positioning'] },
+  'mcp-updates':        { owner: 'Seb M.',              category: ['Messaging & Positioning'] },
+  'tokens-field-guide': { owner: 'Seb M.',              category: ['Messaging & Positioning'] },
+  'case-study-notebooklm':{ owner: 'Seb M.',            category: ['Tools', 'Social Proof'] },
+  'sales-deck-gpt':     { owner: '—',                   category: ['Tools', 'Pitch & Demo'] }
+};
+
+function toggleCard(id) {
+  document.querySelectorAll('.asset-card.expanded').forEach(c => {
+    if (c.id !== 'acard-' + id) c.classList.remove('expanded');
+  });
+  const card = document.getElementById('acard-' + id);
+  if (card) card.classList.toggle('expanded');
+}
+
+function showResults(title, assetIds, fromFilter) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results-title').textContent = title;
+  const totalCount = assetIds.filter(id => ASSETS[id]).length;
+  document.getElementById('results-meta').innerHTML =
+    `<span>${totalCount}</span> asset${totalCount !== 1 ? 's' : ''} · ${fromFilter ? 'Filtered results' : 'Scenario match'}`;
+  const list = document.getElementById('asset-list');
+  list.innerHTML = assetIds.map(id => {
+    const a = ASSETS[id];
+    if (!a) return '';
+    const isDeprecated = a.status === 'deprecated';
+    const isNeedsReview = a.status === 'needs-review';
+    const statusBadge = isDeprecated
+      ? `<span class="tag tag-negative">Deprecated</span>`
+      : isNeedsReview
+        ? `<span class="tag tag-warning">Needs review</span>`
+        : `<span class="tag tag-positive">Current</span>`;
+    const m = ASSET_META[id] || {};
+    const cats = m.category ? m.category.join(', ') : '—';
+    return `<div class="asset-card${isDeprecated ? ' deprecated' : ''}" id="acard-${id}" onclick="toggleCard('${id}')">
+      <div class="asset-card-top">
+        <div class="asset-name">${a.name}</div>
+        <div class="asset-badges">
+          <span class="tag ${a.typeStyle}">${a.type}</span>
+          <span class="asset-chevron">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 4 6 8 10 4"/></svg>
+          </span>
+        </div>
+      </div>
+      <p class="asset-desc">${a.desc}</p>
+      <div class="asset-footer">
+        <div class="asset-status">${statusBadge}</div>
+        <a href="${a.url}" class="open-link" target="_blank" onclick="event.stopPropagation()">
+          Open in Notion
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10L10 2M5 2h5v5"/></svg>
+        </a>
+      </div>
+      <div class="asset-detail">
+        <div class="detail-row">
+          <span class="detail-label">Asset type</span>
+          <span class="detail-value">${a.type}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Category</span>
+          <span class="detail-value">${cats}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Owner</span>
+          <span class="detail-value">${m.owner || '—'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Last reviewed</span>
+          <span class="detail-value">${formatDate(a.lastReviewed)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Review priority</span>
+          <span class="detail-value">${prioHTML(a.reviewPrio)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+function applyFilters() {
+  const assetType = document.getElementById('f-type').value;
+  const category  = document.getElementById('f-category').value;
+  const prio      = document.getElementById('f-prio').value;
+  const hasFilter = assetType || category || prio;
+
+  const pool = currentScenarioAssets ? [...currentScenarioAssets] : Object.keys(ASSETS);
+
+  if (!currentScenarioAssets && !hasFilter) { showEmpty(false); return; }
+
+  let matched = pool.filter(id => {
+    const a = ASSETS[id];
+    if (!a) return false;
+    if (assetType && a.type !== assetType) return false;
+    if (category) {
+      const cats = ASSET_META[id]?.category || [];
+      if (!cats.includes(category)) return false;
+    }
+    if (prio && a.reviewPrio !== prio) return false;
+    return true;
+  });
+
+  if (matched.length === 0) { showEmpty(true); return; }
+
+  const title = currentScenarioAssets ? currentScenarioTitle : 'Filtered assets';
+  showResults(title, matched, !!hasFilter);
+}
+
+renderScenarios();
+</script>
+</body>
+</html>
